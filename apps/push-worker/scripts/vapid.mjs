@@ -1,5 +1,6 @@
 // Generates a VAPID key pair for Web Push.
-// Public key → wrangler.toml [vars] VAPID_PUBLIC_KEY; private JWK → `wrangler secret put VAPID_PRIVATE_KEY`.
+// Public key (raw, base64url) → wrangler.toml [vars] VAPID_PUBLIC_KEY;
+// private key (JWK "d", base64url) → `wrangler secret put VAPID_PRIVATE_KEY`.
 const { publicKey, privateKey } = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, [
   'sign',
   'verify',
@@ -10,4 +11,4 @@ const jwk = await crypto.subtle.exportKey('jwk', privateKey);
 console.log('VAPID_PUBLIC_KEY (put in wrangler.toml [vars]):');
 console.log(b64url);
 console.log('\nVAPID_PRIVATE_KEY (run `pnpm exec wrangler secret put VAPID_PRIVATE_KEY` and paste this):');
-console.log(JSON.stringify(jwk));
+console.log(jwk.d);
