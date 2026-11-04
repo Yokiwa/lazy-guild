@@ -7,7 +7,10 @@ test('catalog shape', () => {
   for (const kind of ['hat', 'cape', 'background', 'title'] as const)
     expect(nonToken.filter((i) => i.kind === kind).length).toBeGreaterThan(0);
   expect(SHOP_ITEMS.filter((i) => i.kind === 'rest_token')).toHaveLength(1);
-  for (const i of nonToken) expect(i.price).toBeGreaterThanOrEqual(40), expect(i.price).toBeLessThanOrEqual(600);
+  for (const i of nonToken) {
+    expect(i.price).toBeGreaterThanOrEqual(40);
+    expect(i.price).toBeLessThanOrEqual(600);
+  }
 });
 test('checkBuy order', () => {
   const hat = SHOP_ITEMS.find((i) => i.kind === 'hat' && i.minRank === 'C')!;
