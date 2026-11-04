@@ -1,0 +1,5 @@
+{
+  "app": { "name": "Lazy Guild", "loading": "Opening the guild doors…" },
+  "nav": { "hall": "Hall", "plan": "Plan", "quests": "Quests", "profile": "Profile", "settings": "Settings" },
+  "common": { "save": "Save", "cancel": "Cancel", "delete": "Delete", "back": "Back", "confirm": "OK", "edit": "Edit", "minutes": "{{count}} min", "hours": "{{count}} h" }
+}

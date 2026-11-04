@@ -1,0 +1,5 @@
+{
+  "app": { "name": "懒人公会", "loading": "公会大门正在打开…" },
+  "nav": { "hall": "大厅", "plan": "计划", "quests": "委托库", "profile": "档案", "settings": "设置" },
+  "common": { "save": "保存", "cancel": "取消", "delete": "删除", "back": "返回", "confirm": "确定", "edit": "编辑", "minutes": "{{count}} 分钟", "hours": "{{count}} 小时" }
+}
