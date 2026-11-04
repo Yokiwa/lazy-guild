@@ -5,3 +5,6 @@ export * from './progression';
 export * from './dates';
 export * from './streak';
 export * from './schedule';
+export * from './badges';
+export * from './shop';
+export * from './backup';
