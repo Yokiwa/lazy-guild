@@ -1,5 +1,332 @@
 {
-  "app": { "name": "Lazy Guild", "loading": "Opening the guild doors…" },
-  "nav": { "hall": "Hall", "plan": "Plan", "quests": "Quests", "profile": "Profile", "settings": "Settings" },
-  "common": { "save": "Save", "cancel": "Cancel", "delete": "Delete", "back": "Back", "confirm": "OK", "edit": "Edit", "minutes": "{{count}} min", "hours": "{{count}} h" }
+  "app": {
+    "name": "Lazy Guild",
+    "loading": "Opening the guild doors…"
+  },
+  "nav": {
+    "hall": "Hall",
+    "plan": "Plan",
+    "quests": "Quests",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "back": "Back",
+    "confirm": "OK",
+    "edit": "Edit",
+    "minutes": "{{count}} min",
+    "hours": "{{count}} h"
+  },
+  "stat": {
+    "STR": "STR",
+    "INT": "INT",
+    "SKL": "SKL"
+  },
+  "species": {
+    "slime": "Slime",
+    "foxfire": "Foxfire",
+    "drake": "Drakeling"
+  },
+  "stage": {
+    "baby": "Baby",
+    "teen": "Teen",
+    "adult": "Adult"
+  },
+  "onboarding": {
+    "welcome": "Welcome to the Lazy Guild",
+    "pitch": "No one here forces you to follow a plan. When the time comes, just pick one quest.",
+    "nameLabel": "Adventurer name",
+    "namePlaceholder": "e.g. Ray",
+    "nameError": "Name must be 1–20 characters",
+    "next": "Next",
+    "pickCompanion": "Pick a companion",
+    "companionHint": "It adventures and grows with you, and never gets upset when you slack off.",
+    "notifyTitle": "Let the guild call you on time",
+    "notifySteps": [
+      "In Safari, tap the Share button",
+      "Choose “Add to Home Screen”",
+      "Open Lazy Guild from your Home Screen, then tap the button below"
+    ],
+    "enableNotify": "Turn on notifications",
+    "skip": "Skip for now",
+    "start": "Start adventuring"
+  },
+  "hall": {
+    "level": "Lv {{level}}",
+    "rank": "Rank {{rank}} adventurer",
+    "xp": "{{into}} / {{next}} XP",
+    "maxLevel": "Max level",
+    "gold": "{{count}} gold",
+    "streak": "{{count}}-day streak",
+    "tokens": "Rest tokens {{count}}",
+    "activeTitle": "On a quest",
+    "remaining": "{{time}} left",
+    "today": "Today’s quest slots",
+    "noSlotsToday": "No slots today — grab a quest whenever you feel like it.",
+    "slotOpen": "Open",
+    "slotUpcoming": "Upcoming",
+    "slotPassed": "Passed",
+    "pickNow": "Pick one",
+    "freeQuest": "Take a quest now",
+    "shop": "Guild shop",
+    "backupReminder": "It’s been over 30 days since your last backup. Your data lives only on this device — export a copy in Settings.",
+    "backupGo": "Back up",
+    "notifyOff": "Notifications are off, so the guild can’t call you on time.",
+    "notifyGo": "Turn on"
+  },
+  "choose": {
+    "title": "New quests",
+    "subtitle": "Pick just one — the rest can wait.",
+    "freeTitle": "Free quest",
+    "freeSubtitle": "Any quest you like.",
+    "expired": "This quest has expired",
+    "expiredHint": "No worries, the guild holds no grudges. Take a free quest if you like.",
+    "toFree": "Take a free quest",
+    "empty": "Your quest library is empty — add some quests first.",
+    "toLibrary": "Open quest library",
+    "quickHint": "Accept within 15 minutes for +20% XP and gold",
+    "conflictTitle": "You already have a quest in progress",
+    "keepCurrent": "Finish the current one first",
+    "replace": "Drop it and take the new one"
+  },
+  "run": {
+    "title": "On a quest",
+    "timeUp": "Time’s up!",
+    "finishEarly": "Finish early",
+    "report": "Report back",
+    "abandon": "Give up",
+    "abandonConfirm": "Give up this quest? Nothing will be taken away.",
+    "none": "No quest in progress",
+    "quick": "Quick accept +20%"
+  },
+  "confirm": {
+    "title": "Did you finish the quest?",
+    "done": "Done",
+    "partial": "Partly",
+    "skipped": "Didn’t do it",
+    "alreadySettled": "This quest has already been settled",
+    "toHall": "Back to the hall",
+    "resultTitle": "Results"
+  },
+  "reward": {
+    "xp": "XP",
+    "gold": "gold",
+    "levelUp": "Level up! Lv {{level}}",
+    "rankUp": "Promoted to rank {{rank}}!",
+    "evolve": "Your companion evolved to {{stage}}!",
+    "badge": "Badge earned: {{name}}",
+    "milestone": "Streak milestone +{{gold}} gold",
+    "unlocked": "New in the shop: {{names}}",
+    "nothing": "No reward this time — and nothing lost either."
+  },
+  "badges": {
+    "first_done": {
+      "name": "First quest",
+      "how": "Finish a quest for the first time"
+    },
+    "first_partial": {
+      "name": "Better than nothing",
+      "how": "Partly finish a quest"
+    },
+    "str_50": {
+      "name": "Mighty",
+      "how": "Reach 50 STR"
+    },
+    "int_50": {
+      "name": "Scholar",
+      "how": "Reach 50 INT"
+    },
+    "skl_50": {
+      "name": "Artisan",
+      "how": "Reach 50 SKL"
+    },
+    "streak_3": {
+      "name": "Three days",
+      "how": "3-day streak"
+    },
+    "streak_7": {
+      "name": "One week",
+      "how": "7-day streak"
+    },
+    "streak_14": {
+      "name": "Two weeks",
+      "how": "14-day streak"
+    },
+    "streak_30": {
+      "name": "One month",
+      "how": "30-day streak"
+    },
+    "streak_100": {
+      "name": "Hundred-day legend",
+      "how": "100-day streak"
+    },
+    "three_types_week": {
+      "name": "All-rounder",
+      "how": "Finish all three quest types within a week"
+    },
+    "first_rest": {
+      "name": "Inn regular",
+      "how": "Use a rest token"
+    },
+    "rank_c": {
+      "name": "Seasoned",
+      "how": "Reach rank C"
+    },
+    "rank_s": {
+      "name": "Legend",
+      "how": "Reach rank S"
+    },
+    "quick_10": {
+      "name": "Swift",
+      "how": "Quick-accept 10 quests"
+    }
+  },
+  "shop": {
+    "items": {
+      "hat_leaf": "Little leaf",
+      "hat_witch": "Witch hat",
+      "hat_knight": "Knight helm",
+      "hat_crown": "Crown",
+      "cape_traveler": "Traveler cape",
+      "cape_guild": "Guild cape",
+      "cape_starlight": "Starlight cape",
+      "bg_forest": "Forest",
+      "bg_town": "Town",
+      "bg_demon_castle": "Demon castle",
+      "title_early_bird": "Early Bird",
+      "title_dragon_tamer": "Dragon Tamer",
+      "rest_token": "Rest token"
+    }
+  },
+  "lines": {
+    "slime": {
+      "greet": [
+        "Bloop~ Let’s take it easy together today!",
+        "You’re here! I was just bouncing around~",
+        "The guild is quiet today. Want a little quest?"
+      ],
+      "accept": [
+        "Off we go! I’ll cheer for you right here~",
+        "Bloop bloop, charge!",
+        "I’ll wait right here for you!"
+      ],
+      "done": [
+        "Amazing! I’m so happy I turned extra round!",
+        "Done! Bloop~ Rewards get!",
+        "Look, look — you did it!"
+      ],
+      "partial": [
+        "Doing part of it is great! Way more than zero!",
+        "A little still counts, bloop~",
+        "Today, this is plenty!"
+      ],
+      "skipped": [
+        "That’s okay~ Rest today, I’ll save tomorrow’s quests for you.",
+        "Bloop, slacking off sometimes is fine.",
+        "We’ll try again next time!"
+      ],
+      "levelUp": [
+        "Level up! I got a tiny bit stronger too!",
+        "A new level! Bloop bloop!",
+        "Yay, Lv UP!"
+      ],
+      "evolve": [
+        "Whoa, I changed! It’s because you kept going!",
+        "I evolved! Bloop bloop bloop!",
+        "I grew up! Let’s keep adventuring together!"
+      ],
+      "rest": [
+        "We used a rest token yesterday — your streak is safe~",
+        "The inn was so comfy! Let’s keep going!",
+        "Resting is part of adventuring too!"
+      ]
+    },
+    "foxfire": {
+      "greet": [
+        "Hehe, we meet again. Which quest will it be today?",
+        "The foxfire is lit. Ready whenever you are.",
+        "I already checked the quest board for you."
+      ],
+      "accept": [
+        "Good choice. I’ll light the way.",
+        "Let’s go, before time slips away.",
+        "This quest suits you."
+      ],
+      "done": [
+        "Beautiful. I knew you could.",
+        "A clean finish. Here’s your reward.",
+        "My foxfire burns brighter for you."
+      ],
+      "partial": [
+        "Half done? That’s a very real half.",
+        "Starting at all beats yesterday’s you.",
+        "No rush. Save the rest for later."
+      ],
+      "skipped": [
+        "Let’s call it a day. The foxfire will keep watch.",
+        "Only clever adventurers know when to rest.",
+        "I’ll save you a spot at tomorrow’s board."
+      ],
+      "levelUp": [
+        "A little stronger again. I’m pleased.",
+        "Leveled up. You walk this road well.",
+        "A new level, a new view."
+      ],
+      "evolve": [
+        "…Another tail. All thanks to you.",
+        "Did you notice? My fire changed color.",
+        "We’re both growing up."
+      ],
+      "rest": [
+        "We used a rest token yesterday. The streak holds.",
+        "Rested at the inn — feeling sharp?",
+        "We rest so we can travel farther."
+      ]
+    },
+    "drake": {
+      "greet": [
+        "Hmph, I wasn’t waiting for you! …Want a quest?",
+        "We get stronger today! With me!",
+        "Finally! I almost fell asleep."
+      ],
+      "accept": [
+        "Good! I approve!",
+        "Charge! I’ll guard your back!",
+        "A quest like this is a piece of cake for us!"
+      ],
+      "done": [
+        "As expected of my partner!",
+        "Heh, I knew you could!",
+        "Done! Time for a little celebratory flame!"
+      ],
+      "partial": [
+        "Hmph, half still earns my approval!",
+        "Just a bit more next time.",
+        "Way better than nothing!"
+      ],
+      "skipped": [
+        "…Even dragons slack off sometimes. I don’t blame you.",
+        "Rest today. I’ll guard the treasure.",
+        "We set out together tomorrow! Promise!"
+      ],
+      "levelUp": [
+        "Level up! My scales are glowing!",
+        "Stronger! Again, again!",
+        "Hmph, you’re getting pretty good."
+      ],
+      "evolve": [
+        "Look! My wings got bigger!",
+        "I evolved! Praise me!",
+        "Behold the power of dragons! …And yours."
+      ],
+      "rest": [
+        "We used a rest token yesterday — I saved your streak!",
+        "The inn’s bed was not bad.",
+        "Rested enough. Onward!"
+      ]
+    }
+  }
 }
