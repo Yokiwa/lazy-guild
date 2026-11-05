@@ -7,6 +7,8 @@ import i18n, { initI18n } from '../../src/i18n';
 import { createProfile } from '../../src/services/guild';
 import { saveQuest, saveSlot } from '../../src/services/plan';
 import { setNow } from '../helpers';
+import { pushClient } from '../../src/push/client';
+import { render as rtlRender } from '@testing-library/react';
 
 beforeAll(() => initI18n('zh'));
 beforeEach(async () => {
@@ -114,4 +116,35 @@ test('language switch updates UI', async () => {
   await user.click(await screen.findByRole('button', { name: 'English' }));
   expect(await screen.findByText('Hall')).toBeInTheDocument();
   expect(await db.kv.get('lang')).toEqual({ key: 'lang', value: 'en' });
+});
+
+test('#6 an oversized backup is rejected without reading it', async () => {
+  const user = userEvent.setup();
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
+  render(<TestApp path="/settings" />);
+  const file = new File(['{}'], 'huge.json', { type: 'application/json' });
+  Object.defineProperty(file, 'size', { value: 6_000_000 });
+  const text = vi.spyOn(file, 'text');
+  await user.upload(await screen.findByLabelText('导入备份'), file);
+  expect(await screen.findByText('文件太大了')).toBeInTheDocument();
+  expect(text).not.toHaveBeenCalled();
+});
+
+test('#7 onboarding asks for notification permission before saving the profile', async () => {
+  await (await import('../../src/db')).resetDb();
+  const seen: number[] = [];
+  vi.spyOn(pushClient, 'enable').mockImplementation(async () => {
+    seen.push(await db.profile.count());
+    return 'off';
+  });
+  const user = userEvent.setup();
+  rtlRender(<TestApp path="/onboarding" />);
+  await user.type(await screen.findByLabelText('冒险者名字'), 'Ray');
+  await user.click(screen.getByRole('button', { name: '下一步' }));
+  await user.click(screen.getByRole('button', { name: /史莱姆/ }));
+  await user.click(screen.getByRole('button', { name: '下一步' }));
+  await user.click(screen.getByRole('button', { name: '开启通知' }));
+  await waitFor(() => expect(seen).toEqual([0]));
+  await waitFor(async () => expect(await db.profile.count()).toBe(1));
+  vi.restoreAllMocks();
 });

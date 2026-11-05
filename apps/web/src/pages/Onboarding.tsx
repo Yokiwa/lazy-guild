@@ -21,9 +21,11 @@ export default function Onboarding() {
 
   const finish = async (enableNotify: boolean) => {
     if (!species || busy) return;
+    // Start enable() first: iOS only shows the permission prompt during the tap itself.
+    const notify = enableNotify ? pushClient.enable() : null;
     setBusy(true);
     await createProfile(name, species, currentLang());
-    if (enableNotify) await pushClient.enable();
+    await notify;
   };
 
   // Navigate only once the Layout itself sees the profile; otherwise it would bounce us back here.

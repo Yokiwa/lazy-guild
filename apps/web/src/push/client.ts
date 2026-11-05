@@ -18,6 +18,7 @@ const DEVICE = 'pushDevice';
 const QUEUE = 'pushQueue';
 const LAST_TZ = 'lastTz';
 const READY_TIMEOUT_MS = 10_000;
+const REQUEST_TIMEOUT_MS = 8_000;
 
 const apiBase = (): string => String(import.meta.env.VITE_PUSH_API ?? '').replace(/\/+$/, '');
 const timeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -49,7 +50,7 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
 async function call(path: string, init: RequestInit = {}, device?: Device): Promise<Response> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (device) headers.Authorization = `Bearer ${device.secret}`;
-  return fetch(apiBase() + path, { ...init, headers });
+  return fetch(apiBase() + path, { ...init, headers, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
 }
 
 async function deviceBody(sub: PushSubscription) {
@@ -78,8 +79,24 @@ function merge(queue: PushOp[], op: PushOp): PushOp[] {
 
 async function enqueue(op: PushOp): Promise<void> {
   if (!apiBase() || !(await kvGet<Device>(DEVICE))) return;
-  await kvSet(QUEUE, merge(await readQueue(), op));
+  await db.transaction('rw', db.kv, async () => kvSet(QUEUE, merge(await readQueue(), op)));
   await pushClient.flush();
+}
+
+/** Removes exactly the op that was sent, leaving anything enqueued meanwhile. */
+async function dequeue(op: PushOp): Promise<void> {
+  const key = JSON.stringify(op);
+  await db.transaction('rw', db.kv, async () => {
+    const queue = await readQueue();
+    const i = queue.findIndex((q) => JSON.stringify(q) === key);
+    if (i >= 0) queue.splice(i, 1);
+    await kvSet(QUEUE, queue);
+  });
+}
+
+/** Fire-and-forget for UI code: the quest loop must never wait on the network. */
+export function inBackground(p: Promise<unknown>): void {
+  p.catch((e) => console.warn('push sync failed', e));
 }
 
 async function forget(): Promise<void> {
@@ -114,32 +131,66 @@ async function send(op: PushOp, device: Device): Promise<'ok' | 'stop' | 'drop' 
   return 'stop';
 }
 
-let flushing: Promise<void> | null = null;
+let flushing: Promise<'done' | 'reset'> | null = null;
+
+function runFlush(): Promise<'done' | 'reset'> {
+  if (flushing) return flushing;
+  flushing = (async (): Promise<'done' | 'reset'> => {
+    for (;;) {
+      const device = await kvGet<Device>(DEVICE);
+      const [op] = await readQueue();
+      if (!device || !op) return 'done';
+      const result = await send(op, device);
+      if (result === 'stop') return 'done';
+      if (result === 'reset') {
+        await forget();
+        return 'reset';
+      }
+      await dequeue(op);
+    }
+  })().finally(() => {
+    flushing = null;
+  });
+  return flushing;
+}
+
+/** The server no longer knows this device (e.g. it was dropped after a 410): start over. */
+async function reRegister(): Promise<void> {
+  if (!supported() || Notification.permission !== 'granted') return;
+  const sub = await (await pushManager())?.getSubscription();
+  await sub?.unsubscribe(); // otherwise the browser hands back the same dead endpoint
+  await registerDevice();
+}
+
+async function registerDevice(): Promise<PushStatus> {
+  const pm = await pushManager();
+  if (!pm) return 'unsupported';
+  try {
+    const { key } = (await (await call('/vapid-public-key')).json()) as { key: string };
+    const sub = await pm.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(key) });
+    const res = await call('/devices', { method: 'POST', body: await deviceBody(sub) });
+    if (!res.ok) return 'off';
+    const { id, secret } = (await res.json()) as { id: string; secret: string };
+    await kvSet(DEVICE, { id, secret, endpoint: sub.endpoint } satisfies Device);
+    await kvSet(LAST_TZ, timeZone());
+    let queue: PushOp[] = [{ op: 'slots' }];
+    const active = await db.runs.where('status').equals('active').first();
+    if (active) queue = merge(queue, { op: 'confirm', runId: active.id, at: active.endsAt });
+    await kvSet(QUEUE, queue);
+  } catch {
+    return 'off';
+  }
+  await runFlush(); // a reset here is not retried, so a broken server can't cause a loop
+  return pushClient.status();
+}
 
 export const pushClient = {
   async enable(): Promise<PushStatus> {
     if (!apiBase()) return 'unconfigured';
     if (!supported()) return 'unsupported';
+    // requestPermission must be the first thing after the tap (iOS needs the user gesture)
     if ((await Notification.requestPermission()) !== 'granted') return 'denied';
-    const pm = await pushManager();
-    if (!pm) return 'unsupported';
-    try {
-      const { key } = (await (await call('/vapid-public-key')).json()) as { key: string };
-      const sub = await pm.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(key) });
-      const res = await call('/devices', { method: 'POST', body: await deviceBody(sub) });
-      if (!res.ok) return 'off';
-      const { id, secret } = (await res.json()) as { id: string; secret: string };
-      await kvSet(DEVICE, { id, secret, endpoint: sub.endpoint } satisfies Device);
-      await kvSet(LAST_TZ, timeZone());
-      let queue: PushOp[] = [{ op: 'slots' }];
-      const active = await db.runs.where('status').equals('active').first();
-      if (active) queue = merge(queue, { op: 'confirm', runId: active.id, at: active.endsAt });
-      await kvSet(QUEUE, queue);
-    } catch {
-      return 'off';
-    }
-    await pushClient.flush();
-    return pushClient.status();
+    return registerDevice();
   },
 
   async disable(): Promise<void> {
@@ -156,21 +207,7 @@ export const pushClient = {
   updateLang: (_lang: Lang) => enqueue({ op: 'device' }),
 
   async flush(): Promise<void> {
-    if (flushing) return flushing;
-    flushing = (async () => {
-      for (;;) {
-        const device = await kvGet<Device>(DEVICE);
-        const [op, ...rest] = await readQueue();
-        if (!device || !op) return;
-        const result = await send(op, device);
-        if (result === 'stop') return;
-        if (result === 'reset') return forget();
-        await kvSet(QUEUE, rest);
-      }
-    })().finally(() => {
-      flushing = null;
-    });
-    return flushing;
+    if ((await runFlush()) === 'reset') await reRegister();
   },
 
   async status(): Promise<PushStatus> {
@@ -195,11 +232,9 @@ export const pushClient = {
       }
       return;
     }
-    const tz = timeZone();
-    if (sub.endpoint !== device.endpoint || (await kvGet<string>(LAST_TZ)) !== tz) {
-      await kvSet(LAST_TZ, tz);
-      await enqueue({ op: 'device' });
-    }
-    await pushClient.flush();
+    // Always re-announce the device: it updates tz/endpoint and reveals (via 401/404) a device
+    // the server has dropped, which then re-registers.
+    await kvSet(LAST_TZ, timeZone());
+    await enqueue({ op: 'device' });
   },
 };

@@ -104,3 +104,14 @@ test('old sent_log rows are pruned', async () => {
   await runDispatch(env, new Date(at19), fakeSender().sender);
   expect(await rows('sent_log')).toHaveLength(0);
 });
+
+test('a failed slot push is retried on the next minute (review)', async () => {
+  await addDevice('d1');
+  await addSlot('d1');
+  const { sender, calls } = fakeSender(500);
+  await runDispatch(env, new Date(at19), sender);
+  sender.status = 201;
+  await runDispatch(env, new Date(at19 + 60000), sender);
+  await runDispatch(env, new Date(at19 + 120000), sender);
+  expect(calls).toHaveLength(2);
+});

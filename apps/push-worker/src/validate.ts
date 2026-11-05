@@ -11,8 +11,15 @@ const tz = z.string().refine((value) => {
   }
 });
 
+/** Only real browser push services; anything else would turn the Worker into a relay. */
+const PUSH_HOSTS = ['web.push.apple.com', 'fcm.googleapis.com', 'updates.push.services.mozilla.com'];
+const PUSH_HOST_SUFFIXES = ['.notify.windows.com', '.push.apple.com'];
+export function isPushHost(host: string): boolean {
+  return PUSH_HOSTS.includes(host) || PUSH_HOST_SUFFIXES.some((s) => host.endsWith(s));
+}
+
 export const SubscriptionBody = z.object({
-  endpoint: z.url({ protocol: /^https$/ }),
+  endpoint: z.url({ protocol: /^https$/ }).refine((u) => isPushHost(new URL(u).hostname), 'unsupported push service'),
   keys: z.object({ p256dh: z.string().min(1).max(512), auth: z.string().min(1).max(512) }),
 });
 
@@ -31,7 +38,15 @@ export const SlotsBody = z.object({
         time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
       }),
     )
-    .max(42),
+    .max(42)
+    .refine((slots) => {
+      // mirrors the app's limit: at most 6 distinct times per weekday
+      for (let day = 0; day < 7; day++) {
+        const times = new Set(slots.filter((s) => s.weekdays.includes(day)).map((s) => s.time));
+        if (times.size > 6) return false;
+      }
+      return true;
+    }, 'too many slots on one day'),
 });
 
 export const OneOffBody = z.object({

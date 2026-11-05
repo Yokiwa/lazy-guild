@@ -1,7 +1,8 @@
 import { SELF, env } from 'cloudflare:test';
 
-const sub = { endpoint: 'https://push.example/abc', keys: { p256dh: 'p256', auth: 'authkey' } };
-const deviceBody = { subscription: sub, tz: 'America/New_York', lang: 'zh' };
+let n = 0;
+const sub = () => ({ endpoint: `https://web.push.apple.com/dev${n++}`, keys: { p256dh: 'p256', auth: 'authkey' } });
+const deviceBody = () => ({ subscription: sub(), tz: 'America/New_York', lang: 'zh' });
 const url = (p: string) => `https://w/api${p}`;
 // D1 storage is shared by the tests in this file, so every count is scoped to one device.
 const count = async (table: string, deviceId: string) =>
@@ -10,7 +11,7 @@ const count = async (table: string, deviceId: string) =>
     .first<{ n: number }>())!).n;
 
 async function register() {
-  const res = await SELF.fetch(url('/devices'), { method: 'POST', body: JSON.stringify(deviceBody) });
+  const res = await SELF.fetch(url('/devices'), { method: 'POST', body: JSON.stringify(deviceBody()) });
   expect(res.status).toBe(201);
   return (await res.json()) as { id: string; secret: string };
 }
@@ -45,9 +46,9 @@ test('wrong secret is 401, unknown device is 404', async () => {
 
 test('invalid tz / lang / time / endpoint / oversized body rejected', async () => {
   const post = (body: unknown) => SELF.fetch(url('/devices'), { method: 'POST', body: JSON.stringify(body) });
-  expect((await post({ ...deviceBody, tz: 'Mars/Base' })).status).toBe(400);
-  expect((await post({ ...deviceBody, lang: 'fr' })).status).toBe(400);
-  expect((await post({ ...deviceBody, subscription: { ...sub, endpoint: 'http://insecure' } })).status).toBe(400);
+  expect((await post({ ...deviceBody(), tz: 'Mars/Base' })).status).toBe(400);
+  expect((await post({ ...deviceBody(), lang: 'fr' })).status).toBe(400);
+  expect((await post({ ...deviceBody(), subscription: { ...sub(), endpoint: 'http://insecure' } })).status).toBe(400);
   expect((await SELF.fetch(url('/devices'), { method: 'POST', body: 'not json' })).status).toBe(400);
   expect((await SELF.fetch(url('/devices'), { method: 'POST', body: 'x'.repeat(17 * 1024) })).status).toBe(413);
   const { id, secret } = await register();
@@ -81,7 +82,7 @@ test('one-off upsert and delete', async () => {
 test('PUT device updates tz and lang', async () => {
   const { id, secret } = await register();
   const res = await SELF.fetch(url(`/devices/${id}`), {
-    method: 'PUT', headers: auth(secret), body: JSON.stringify({ ...deviceBody, tz: 'Asia/Tokyo', lang: 'en' }),
+    method: 'PUT', headers: auth(secret), body: JSON.stringify({ ...deviceBody(), tz: 'Asia/Tokyo', lang: 'en' }),
   });
   expect(res.status).toBe(204);
   expect(await env.DB.prepare('SELECT tz, lang FROM devices WHERE id = ?').bind(id).first()).toEqual({ tz: 'Asia/Tokyo', lang: 'en' });
@@ -124,4 +125,51 @@ test('stores no quest names', async () => {
 
 test('unknown route is 404', async () => {
   expect((await SELF.fetch(url('/nope'))).status).toBe(404);
+});
+
+describe('abuse limits (review #2)', () => {
+  beforeEach(async () => {
+    await env.DB.batch(['devices', 'slot_times', 'one_offs', 'sent_log'].map((t) => env.DB.prepare(`DELETE FROM ${t}`)));
+  });
+  const post = (body: unknown) => SELF.fetch(url('/devices'), { method: 'POST', body: JSON.stringify(body) });
+
+  test('only known push services are accepted as endpoints', async () => {
+    const bad = { ...deviceBody(), subscription: { ...sub(), endpoint: 'https://attacker.example/hook' } };
+    expect((await post(bad)).status).toBe(400);
+    for (const host of ['web.push.apple.com', 'fcm.googleapis.com', 'updates.push.services.mozilla.com', 'wns2-by3p.notify.windows.com']) {
+      const ok = { ...deviceBody(), subscription: { ...sub(), endpoint: `https://${host}/x${n++}` } };
+      expect((await post(ok)).status, host).toBe(201);
+    }
+  });
+
+  test('registering the same endpoint again replaces the old device', async () => {
+    const body = deviceBody();
+    const first = (await (await post(body)).json()) as { id: string };
+    const second = (await (await post(body)).json()) as { id: string };
+    expect(second.id).not.toBe(first.id);
+    expect(((await env.DB.prepare('SELECT COUNT(*) AS n FROM devices').first<{ n: number }>())!).n).toBe(1);
+  });
+
+  test('device count is capped', async () => {
+    for (let i = 0; i < 20; i++) expect((await post(deviceBody())).status).toBe(201);
+    expect((await post(deviceBody())).status).toBe(429);
+  });
+
+  test('more than 6 distinct times on one weekday is rejected', async () => {
+    const { id, secret } = await register();
+    const slots = Array.from({ length: 7 }, (_, i) => ({ slotId: `s${i}`, weekdays: [1], time: `0${i}:00` }));
+    const res = await SELF.fetch(url(`/devices/${id}/slots`), { method: 'PUT', headers: auth(secret), body: JSON.stringify({ slots }) });
+    expect(res.status).toBe(400);
+  });
+
+  test('one-offs per device are capped', async () => {
+    const { id, secret } = await register();
+    const put = (i: number) =>
+      SELF.fetch(url(`/devices/${id}/one-offs/r${i}`), {
+        method: 'PUT', headers: auth(secret), body: JSON.stringify({ at: '2026-11-10T02:00:00Z', kind: 'confirm', runId: `r${i}` }),
+      });
+    for (let i = 0; i < 10; i++) expect((await put(i)).status).toBe(204);
+    expect((await put(10)).status).toBe(429);
+    expect((await put(0)).status).toBe(204); // updating an existing one is fine
+  });
 });

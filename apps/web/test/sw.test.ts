@@ -33,3 +33,10 @@ test('notificationclick opens a window when none exists, and ignores foreign url
   await handleNotificationClick({ notification: { data: { url: 'https://evil.example/x' }, close: vi.fn() } }, clients, 'https://app.example');
   expect(clients.openWindow).toHaveBeenCalledWith('https://app.example/');
 });
+
+test('#9 falls back to opening a window when navigate() rejects', async () => {
+  const client = { url: 'https://app.example/', focus: vi.fn(async () => client), navigate: vi.fn(async () => { throw new TypeError('not controlled'); }) };
+  const clients = { matchAll: vi.fn(async () => [client]), openWindow: vi.fn(async () => null) };
+  await handleNotificationClick({ notification: { data: { url: '/confirm?run=r1' }, close: vi.fn() } }, clients, 'https://app.example');
+  expect(clients.openWindow).toHaveBeenCalledWith('https://app.example/confirm?run=r1');
+});

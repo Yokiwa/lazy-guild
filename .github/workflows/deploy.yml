@@ -11,7 +11,15 @@ concurrency: deploy
 jobs:
   check:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    # Only deploy code that was pushed to main in THIS repository. workflow_run's `branches`
+    # filter matches the head branch name, so a fork PR from a branch called "main" would
+    # otherwise run here with repository secrets.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     outputs:
       ready: ${{ steps.cf.outputs.ready }}
     steps:
@@ -29,6 +37,7 @@ jobs:
 
   deploy:
     needs: check
+    environment: production
     if: needs.check.outputs.ready == 'true'
     runs-on: ubuntu-latest
     env:

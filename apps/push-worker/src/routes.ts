@@ -1,6 +1,9 @@
 import { authorize, generateSecret, hashSecret } from './auth';
 import type { Env } from './env';
 import { getVapidKeys } from './vapid';
+
+export const MAX_DEVICES = 20;
+export const MAX_ONE_OFFS_PER_DEVICE = 10;
 import { DeviceBody, HttpError, OneOffBody, SlotsBody, readJson } from './validate';
 
 /** The app is served from the same origin; CORS only matters for local dev against another origin. */
@@ -37,6 +40,13 @@ export async function handleRequest(req: Request, env: Env): Promise<Response> {
 
     if (req.method === 'POST' && path === '/devices') {
       const body = await readJson(req, DeviceBody);
+      // Same endpoint = same browser re-registering (e.g. lost credentials): replace the old device.
+      const old = await env.DB.prepare('SELECT id FROM devices WHERE endpoint = ?')
+        .bind(body.subscription.endpoint)
+        .first<{ id: string }>();
+      if (old) await deleteDevice(env, old.id);
+      const total = (await env.DB.prepare('SELECT COUNT(*) AS n FROM devices').first<{ n: number }>())!.n;
+      if (total >= MAX_DEVICES) return json(env, { error: 'too many devices' }, 429);
       const id = crypto.randomUUID();
       const secret = generateSecret();
       await env.DB.prepare(
@@ -81,6 +91,9 @@ export async function handleRequest(req: Request, env: Env): Promise<Response> {
     }
     if (sub === 'one-offs' && oid && req.method === 'PUT') {
       const body = await readJson(req, OneOffBody);
+      const existing = await env.DB.prepare('SELECT 1 FROM one_offs WHERE device_id = ? AND id = ?').bind(id, oid).first();
+      const count = (await env.DB.prepare('SELECT COUNT(*) AS n FROM one_offs WHERE device_id = ?').bind(id).first<{ n: number }>())!.n;
+      if (!existing && count >= MAX_ONE_OFFS_PER_DEVICE) return json(env, { error: 'too many reminders' }, 429);
       await env.DB.prepare('INSERT OR REPLACE INTO one_offs (device_id, id, at, kind, run_id) VALUES (?, ?, ?, ?, ?)')
         .bind(id, oid, new Date(body.at).toISOString(), body.kind, body.runId)
         .run();

@@ -1,7 +1,7 @@
 import { type Quest, type Slot, type SlotError, validateQuest, validateSlot } from '@lazy-guild/core';
 import { db } from '../db';
 import { newId } from '../lib/id';
-import { pushClient } from '../push/client';
+import { inBackground, pushClient } from '../push/client';
 
 export async function saveQuest(
   q: Omit<Quest, 'id' | 'archived'> & { id?: string },
@@ -41,13 +41,13 @@ export async function saveSlot(
     await db.slots.put(slot);
     return { ok: true as const, id: slot.id };
   });
-  if (result.ok) await pushClient.syncSlots();
+  if (result.ok) inBackground(pushClient.syncSlots());
   return result;
 }
 
 export async function removeSlot(id: string): Promise<void> {
   await db.slots.delete(id);
-  await pushClient.syncSlots();
+  inBackground(pushClient.syncSlots());
 }
 
 export async function candidatesFor(slotId: string): Promise<Quest[]> {

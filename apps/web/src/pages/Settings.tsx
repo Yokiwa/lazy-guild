@@ -1,4 +1,4 @@
-import type { Lang } from '@lazy-guild/core';
+import { BACKUP_MAX_BYTES, type Lang } from '@lazy-guild/core';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -87,7 +87,12 @@ export default function Settings() {
             onChange={async (e) => {
               const file = e.target.files?.[0];
               e.target.value = '';
-              if (!file || !window.confirm(t('settings.importConfirm'))) return;
+              if (!file) return;
+              if (file.size > BACKUP_MAX_BYTES) {
+                setMessage({ ok: false, text: t('settings.importErrors.too_large') });
+                return;
+              }
+              if (!window.confirm(t('settings.importConfirm'))) return;
               const res = await importBackupText(await file.text());
               setMessage(
                 res.ok ? { ok: true, text: t('settings.importOk') } : { ok: false, text: t(`settings.importErrors.${res.error}`) },

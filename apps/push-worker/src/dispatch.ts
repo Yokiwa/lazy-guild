@@ -59,6 +59,10 @@ export async function runDispatch(env: Env, now: Date, sender: PushSender): Prom
         alive = false;
         break;
       }
+      if (!ok(status)) {
+        // transient failure: release the claim so the lookback window retries next minute
+        await env.DB.prepare('DELETE FROM sent_log WHERE device_id = ? AND key = ?').bind(d.id, due.key).run();
+      }
     }
     if (!alive) {
       await deleteDevice(env, d.id);

@@ -1,7 +1,7 @@
 import { type BackupError, localDate, makeBackup, parseBackup } from '@lazy-guild/core';
 import { db, loadGuildData, replaceGuildData } from '../db';
 import { now } from '../lib/clock';
-import { pushClient } from '../push/client';
+import { inBackground, pushClient } from '../push/client';
 
 /** Serializes all local data; records lastBackupAt. */
 export async function exportBackupFile(): Promise<Blob> {
@@ -43,6 +43,6 @@ export async function importBackupText(
   const preImport = new Blob([JSON.stringify(current ? makeBackup(current, t) : null, null, 2)], { type: 'application/json' });
   downloadBlob(preImport, backupFileName('lazy-guild-before-import'));
   await replaceGuildData(parsed.data);
-  await pushClient.syncSlots();
+  inBackground(pushClient.syncSlots());
   return { ok: true, preImport };
 }

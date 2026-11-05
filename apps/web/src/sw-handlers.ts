@@ -51,9 +51,13 @@ export async function handleNotificationClick(
   const windows = await clients.matchAll({ type: 'window', includeUncontrolled: true });
   const existing = windows.find((c) => c.url.startsWith(origin));
   if (existing) {
-    await existing.focus();
-    await existing.navigate(target);
-    return;
+    try {
+      await existing.focus();
+      await existing.navigate(target); // rejects for windows this worker doesn't control
+      return;
+    } catch {
+      // fall through to a fresh window
+    }
   }
   await clients.openWindow(target);
 }

@@ -7,7 +7,7 @@ import {
 import { db } from '../db';
 import { now } from '../lib/clock';
 import { newId } from '../lib/id';
-import { pushClient } from '../push/client';
+import { inBackground, pushClient } from '../push/client';
 
 const SEED: Record<Lang, { name: string; stat: Quest['stat']; minutes: number; icon: string }[]> = {
   zh: [
@@ -71,8 +71,8 @@ export async function acceptQuest(input: {
     await db.runs.add(run);
     return { ok: true, run };
   });
-  if (replaced) await pushClient.cancelConfirm(replaced);
-  if (result.ok) await pushClient.scheduleConfirm(result.run);
+  if (replaced) inBackground(pushClient.cancelConfirm(replaced));
+  if (result.ok) inBackground(pushClient.scheduleConfirm(result.run));
   return result;
 }
 
@@ -116,7 +116,7 @@ export async function settleRun(runId: string, outcome: Outcome): Promise<Settle
     });
     return { reward, delta, newBadges, milestoneGold, unlocked: newlyUnlocked(delta.rankBefore, delta.rankAfter) };
   });
-  if (result) await pushClient.cancelConfirm(runId);
+  if (result) inBackground(pushClient.cancelConfirm(runId));
   return result;
 }
 
@@ -127,7 +127,7 @@ export async function abandonRun(runId: string): Promise<void> {
     await db.runs.update(runId, { status: 'abandoned', settledAt: now().toISOString() });
     return true;
   });
-  if (changed) await pushClient.cancelConfirm(runId);
+  if (changed) inBackground(pushClient.cancelConfirm(runId));
 }
 
 export function currentStreak(profile: Profile, runs: Run[]): StreakState {

@@ -5,6 +5,7 @@ import {
 import { candidatesFor, removeQuest, removeSlot, saveQuest, saveSlot } from '../src/services/plan';
 import type { Run } from '@lazy-guild/core';
 import { setNow } from './helpers';
+import { pushClient } from '../src/push/client';
 
 beforeEach(async () => {
   await resetDb();
@@ -185,4 +186,19 @@ test('guildSummary reports level, rank, streak and open occurrence', async () =>
   expect(s.streak.tokens).toBe(2);
   expect(s.openOcc?.date).toBe('2026-11-09');
   expect(s.today).toHaveLength(1);
+});
+
+test('#5 the quest loop never waits on the push network', async () => {
+  const hang = () => new Promise<void>(() => {});
+  vi.spyOn(pushClient, 'scheduleConfirm').mockImplementation(hang);
+  vi.spyOn(pushClient, 'cancelConfirm').mockImplementation(hang);
+  vi.spyOn(pushClient, 'syncSlots').mockImplementation(hang);
+  const within = <T,>(p: Promise<T>) =>
+    Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error('waited on push')), 300))]);
+  const gym = await questByMinutes(120);
+  const res = await within(acceptQuest({ questId: gym.id, slotId: null, date: null }));
+  if (!res.ok) throw new Error(res.reason);
+  await within(settleRun(res.run.id, 'done'));
+  await within(saveSlot({ weekdays: [1], time: '19:00', questIds: [gym.id, (await questByMinutes(60)).id] }));
+  vi.restoreAllMocks();
 });

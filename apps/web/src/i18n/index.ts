@@ -2,7 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import type { Lang } from '@lazy-guild/core';
 import { kvGet, kvSet } from '../db';
-import { pushClient } from '../push/client';
+import { inBackground, pushClient } from '../push/client';
 import en from './en.json';
 import zh from './zh.json';
 
@@ -37,7 +37,7 @@ export async function setLang(lang: Lang): Promise<void> {
   await kvSet('lang', lang);
   await i18n.changeLanguage(lang);
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
-  await pushClient.updateLang(lang);
+  inBackground(pushClient.updateLang(lang));
 }
 
 export default i18n;

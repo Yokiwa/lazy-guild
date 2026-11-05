@@ -164,3 +164,45 @@ test('disable deletes the device and unsubscribes', async () => {
   expect(sub.unsubscribe).toHaveBeenCalled();
   expect(await pushClient.status()).toBe('off');
 });
+
+describe('review fixes', () => {
+  test('#3 device deleted on the server: startup notices and re-registers', async () => {
+    const { pushManager } = installBrowser();
+    await pushClient.enable();
+    const oldSub = currentSub!;
+    statusFor = (m, p) => (m === 'PUT' && p === '/devices/dev1' ? 404 : m === 'POST' && p === '/devices' ? 201 : 204);
+    calls = [];
+    await pushClient.onStartup();
+    expect(calls.map((c) => `${c.method} ${c.path}`)).toEqual(
+      expect.arrayContaining(['PUT /devices/dev1', 'GET /vapid-public-key', 'POST /devices']),
+    );
+    expect(oldSub.unsubscribe).toHaveBeenCalled();
+    expect(pushManager.subscribe).toHaveBeenCalledTimes(2);
+    expect(await kvGet('pushDevice')).toBeDefined();
+  });
+
+  test('#4 an op queued while another is in flight is not lost', async () => {
+    installBrowser();
+    await pushClient.enable();
+    calls = [];
+    const inner = vi.mocked(fetch).getMockImplementation()!;
+    let late: Promise<void> | null = null;
+    vi.mocked(fetch).mockImplementation(async (url, init) => {
+      if (!late && String(url).endsWith('/slots')) {
+        late = pushClient.scheduleConfirm({ id: 'run9', endsAt: '2026-11-10T02:00:00.000Z' } as never);
+        await new Promise((r) => setTimeout(r, 30));
+      }
+      return inner(url as string, init);
+    });
+    await pushClient.syncSlots();
+    await late;
+    expect(calls.map((c) => `${c.method} ${c.path}`)).toEqual(['PUT /devices/dev1/slots', 'PUT /devices/dev1/one-offs/run9']);
+    expect(await kvGet('pushQueue')).toEqual([]);
+  });
+
+  test('#5 requests carry a timeout signal', async () => {
+    installBrowser();
+    await pushClient.enable();
+    for (const [, init] of vi.mocked(fetch).mock.calls) expect((init as RequestInit).signal).toBeInstanceOf(AbortSignal);
+  });
+});
