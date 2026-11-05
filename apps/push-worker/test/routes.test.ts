@@ -2,7 +2,7 @@ import { SELF, env } from 'cloudflare:test';
 
 const sub = { endpoint: 'https://push.example/abc', keys: { p256dh: 'p256', auth: 'authkey' } };
 const deviceBody = { subscription: sub, tz: 'America/New_York', lang: 'zh' };
-const url = (p: string) => `https://w${p}`;
+const url = (p: string) => `https://w/api${p}`;
 // D1 storage is shared by the tests in this file, so every count is scoped to one device.
 const count = async (table: string, deviceId: string) =>
   ((await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE ${table === 'devices' ? 'id' : 'device_id'} = ?`)

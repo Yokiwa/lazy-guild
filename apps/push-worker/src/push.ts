@@ -1,5 +1,5 @@
 import { buildPushPayload } from '@block65/webcrypto-web-push';
-import type { Env } from './env';
+import type { VapidKeys } from './vapid';
 
 export interface NotificationPayload {
   kind: 'slot' | 'confirm';
@@ -19,8 +19,7 @@ export interface PushSender {
   send(sub: PushTarget, payload: NotificationPayload): Promise<{ status: number }>;
 }
 
-export function createWebPushSender(env: Env): PushSender {
-  const vapid = { subject: env.VAPID_SUBJECT, publicKey: env.VAPID_PUBLIC_KEY, privateKey: env.VAPID_PRIVATE_KEY };
+export function createWebPushSender(vapid: VapidKeys): PushSender {
   return {
     async send(sub, payload) {
       const req = await buildPushPayload(

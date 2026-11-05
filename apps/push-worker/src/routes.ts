@@ -1,8 +1,11 @@
 import { authorize, generateSecret, hashSecret } from './auth';
 import type { Env } from './env';
+import { getVapidKeys } from './vapid';
 import { DeviceBody, HttpError, OneOffBody, SlotsBody, readJson } from './validate';
 
+/** The app is served from the same origin; CORS only matters for local dev against another origin. */
 function cors(env: Env): Record<string, string> {
+  if (!env.ALLOWED_ORIGIN) return {};
   return {
     'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -26,9 +29,11 @@ export async function deleteDevice(env: Env, id: string): Promise<void> {
 
 export async function handleRequest(req: Request, env: Env): Promise<Response> {
   if (req.method === 'OPTIONS') return empty(env, 204);
-  const path = new URL(req.url).pathname.replace(/\/+$/, '') || '/';
+  const full = new URL(req.url).pathname.replace(/\/+$/, '') || '/';
+  if (full !== '/api' && !full.startsWith('/api/')) return json(env, { error: 'not found' }, 404);
+  const path = full.slice('/api'.length) || '/';
   try {
-    if (req.method === 'GET' && path === '/vapid-public-key') return json(env, { key: env.VAPID_PUBLIC_KEY });
+    if (req.method === 'GET' && path === '/vapid-public-key') return json(env, { key: (await getVapidKeys(env)).publicKey });
 
     if (req.method === 'POST' && path === '/devices') {
       const body = await readJson(req, DeviceBody);

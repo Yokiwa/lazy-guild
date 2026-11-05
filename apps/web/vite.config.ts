@@ -30,6 +30,8 @@ export default defineConfig({
       },
     }),
   ],
+  // Local dev: run `pnpm --filter @lazy-guild/push-worker dev` and start Vite with VITE_PUSH_API=/api
+  server: { proxy: { '/api': 'http://localhost:8787' } },
   test: {
     globals: true,
     environment: 'jsdom',

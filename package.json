@@ -3,12 +3,17 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.28.0",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "lint": "eslint .",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "screenshots": "pnpm --filter @lazy-guild/web screenshots",
+    "e2e": "pnpm --filter @lazy-guild/web e2e",
+    "dev": "pnpm --filter @lazy-guild/web dev"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",

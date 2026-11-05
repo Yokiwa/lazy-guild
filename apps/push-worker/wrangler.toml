@@ -1,6 +1,12 @@
-name = "lazy-guild-push"
+# One Worker serves the web app (static assets) and the push API under /api.
+name = "lazy-guild"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
+
+[assets]
+directory = "../web/dist"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
 
 [triggers]
 crons = ["* * * * *"]
@@ -8,15 +14,14 @@ crons = ["* * * * *"]
 [[d1_databases]]
 binding = "DB"
 database_name = "lazy-guild"
-# Replace with the id printed by `wrangler d1 create lazy-guild` (see docs/deploy.md)
+# The deploy workflow fills this in automatically (see docs/deploy.md).
 database_id = "00000000-0000-0000-0000-000000000000"
 migrations_dir = "migrations"
 
 [vars]
-# Replace with the output of `pnpm --filter @lazy-guild/push-worker vapid` (see docs/deploy.md)
-VAPID_PUBLIC_KEY = ""
 VAPID_SUBJECT = "mailto:lazy-guild@example.com"
-# The web app's origin, e.g. https://lazy-guild.pages.dev
-ALLOWED_ORIGIN = "http://localhost:5173"
-
-# Secret (never committed): wrangler secret put VAPID_PRIVATE_KEY
+# Leave empty in production: the app and API share one origin. Set for local dev only.
+ALLOWED_ORIGIN = ""
+# VAPID keys are generated on first use and stored in D1. To use your own instead, set
+# VAPID_PUBLIC_KEY as a var and VAPID_PRIVATE_KEY with `wrangler secret put`.
+VAPID_PUBLIC_KEY = ""
