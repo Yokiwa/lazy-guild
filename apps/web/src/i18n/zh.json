@@ -199,7 +199,26 @@
       "title_early_bird": "早起的冒险者",
       "title_dragon_tamer": "驯龙者",
       "rest_token": "旅店休息券"
-    }
+    },
+    "title": "公会商店",
+    "balance": "你有 {{count}} 金币",
+    "kinds": {
+      "hat": "帽子",
+      "cape": "披风",
+      "background": "大厅背景",
+      "title": "称号",
+      "rest_token": "道具"
+    },
+    "buy": "购买 {{price}}",
+    "equip": "装备",
+    "unequip": "卸下",
+    "reasons": {
+      "rank": "需要 {{rank}} 阶",
+      "gold": "金币不够",
+      "token_cap": "休息券最多存 3 张",
+      "owned": "已拥有"
+    },
+    "bought": "买好了！"
   },
   "lines": {
     "slime": {
@@ -328,5 +347,93 @@
         "休息够了，继续冒险！"
       ]
     }
+  },
+  "weekdays": [
+    "周日",
+    "周一",
+    "周二",
+    "周三",
+    "周四",
+    "周五",
+    "周六"
+  ],
+  "plan": {
+    "title": "每周计划",
+    "hint": "给每天设几个时间点，到点了从 2–3 个委托里挑一个。",
+    "add": "添加时段",
+    "form": "时段",
+    "days": "哪几天",
+    "time": "时间",
+    "candidates": "候选委托（2–3 个）",
+    "empty": "这一天还没有时段",
+    "needsCandidates": "需要补候选",
+    "noQuests": "先去委托库加几个委托吧。",
+    "errors": {
+      "candidates": "要选 2–3 个候选委托",
+      "weekdays": "至少选一天",
+      "time": "时间格式不对",
+      "per_day": "这一天已经有 6 个时段了",
+      "duplicate": "这一天这个时间已经有时段了"
+    }
+  },
+  "quests": {
+    "title": "委托库",
+    "hint": "把想做的事写成委托。删除用过的委托会归档，日志里还会保留。",
+    "add": "添加委托",
+    "form": "委托",
+    "name": "名称",
+    "stat": "类型",
+    "minutes": "时长（分钟）",
+    "icon": "图标",
+    "editLabel": "编辑 {{name}}",
+    "archived": "“{{name}}”已归档：它还在冒险日志或时段里用到。",
+    "deleted": "“{{name}}”已删除。",
+    "errors": {
+      "name": "名称要 1–40 个字",
+      "minutes": "时长要在 5–480 分钟之间"
+    }
+  },
+  "profile": {
+    "title": "冒险者档案",
+    "stats": "属性",
+    "badges": "徽章",
+    "log": "冒险日志",
+    "logEmpty": "还没有完成过委托。第一份委托在等你。",
+    "partialTag": "部分完成",
+    "best": "最长连续 {{count}} 天"
+  },
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "notifications": "通知",
+    "status": {
+      "synced": "已开启，已同步",
+      "pending": "已开启，等待同步（联网后自动同步）",
+      "off": "未开启",
+      "unsupported": "这个浏览器不支持推送。在 iPhone 上要先把网页添加到主屏幕（iOS 16.4 及以上）。",
+      "unconfigured": "这个版本没有配置推送服务（见 docs/deploy.md）。",
+      "denied": "通知权限被拒绝了，要去系统设置里允许。"
+    },
+    "enable": "开启通知",
+    "disable": "关闭通知",
+    "backup": "备份",
+    "backupHint": "数据只存在这台设备上。换手机或清理浏览器前，先导出备份。",
+    "lastBackup": "上次备份：{{date}}",
+    "never": "从未",
+    "export": "导出备份",
+    "import": "导入备份",
+    "importConfirm": "导入会替换现在的全部数据（会先自动导出一份当前数据）。继续吗？",
+    "importOk": "导入成功！",
+    "importErrors": {
+      "too_large": "文件太大了",
+      "not_json": "这不是备份文件（不是 JSON）",
+      "wrong_app": "这不是懒人公会的备份",
+      "newer_version": "这个备份来自更新的版本，请先更新 App",
+      "invalid": "备份文件内容有错误"
+    },
+    "reminderOff": "关闭 30 天备份提醒",
+    "about": "关于",
+    "aboutText": "懒人公会 · 开源（MIT）。给从来不按计划执行、但又想有个计划的人。",
+    "source": "GitHub 源码"
   }
 }

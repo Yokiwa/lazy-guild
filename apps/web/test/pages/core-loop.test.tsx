@@ -26,6 +26,13 @@ test('onboarding creates the adventurer and opens the plan', async () => {
   await user.click(screen.getByRole('button', { name: '先跳过' }));
   await waitFor(async () => expect(await db.profile.get('me')).toMatchObject({ name: 'Ray', species: 'slime' }));
   expect(await db.quests.count()).toBe(4);
+  expect(await screen.findByRole('form', { name: '时段' })).toBeInTheDocument();
+});
+
+test('visiting onboarding with an existing profile goes to the hall', async () => {
+  await createProfile('Ray', 'slime', 'zh');
+  render(<TestApp path="/onboarding" />);
+  expect(await screen.findByText('Lv 1')).toBeInTheDocument();
 });
 
 test('onboarding rejects an empty name', async () => {

@@ -1,8 +1,9 @@
 import type { Species } from '@lazy-guild/core';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { Companion } from '../art/Companion';
+import { useLayoutProfile } from '../components/Layout';
 import { currentLang } from '../i18n';
 import { pushClient } from '../push/client';
 import { createProfile } from '../services/guild';
@@ -11,20 +12,22 @@ const SPECIES: Species[] = ['slime', 'foxfire', 'drake'];
 
 export default function Onboarding() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [species, setSpecies] = useState<Species | null>(null);
   const [nameError, setNameError] = useState(false);
   const [busy, setBusy] = useState(false);
+  const profile = useLayoutProfile();
 
   const finish = async (enableNotify: boolean) => {
     if (!species || busy) return;
     setBusy(true);
     await createProfile(name, species, currentLang());
     if (enableNotify) await pushClient.enable();
-    navigate('/plan?new=1', { replace: true });
   };
+
+  // Navigate only once the Layout itself sees the profile; otherwise it would bounce us back here.
+  if (profile) return <Navigate to={busy ? '/plan?new=1' : '/'} replace />;
 
   return (
     <section className="page onboarding">

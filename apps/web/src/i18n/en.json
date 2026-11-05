@@ -199,7 +199,26 @@
       "title_early_bird": "Early Bird",
       "title_dragon_tamer": "Dragon Tamer",
       "rest_token": "Rest token"
-    }
+    },
+    "title": "Guild shop",
+    "balance": "You have {{count}} gold",
+    "kinds": {
+      "hat": "Hats",
+      "cape": "Capes",
+      "background": "Backgrounds",
+      "title": "Titles",
+      "rest_token": "Items"
+    },
+    "buy": "Buy {{price}}",
+    "equip": "Equip",
+    "unequip": "Unequip",
+    "reasons": {
+      "rank": "Requires rank {{rank}}",
+      "gold": "Not enough gold",
+      "token_cap": "You can hold at most 3 rest tokens",
+      "owned": "Owned"
+    },
+    "bought": "Purchased!"
   },
   "lines": {
     "slime": {
@@ -328,5 +347,93 @@
         "Rested enough. Onward!"
       ]
     }
+  },
+  "weekdays": [
+    "Sun",
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat"
+  ],
+  "plan": {
+    "title": "Weekly plan",
+    "hint": "Set a few times each day. When one arrives, pick one of 2–3 quests.",
+    "add": "Add slot",
+    "form": "Slot",
+    "days": "Days",
+    "time": "Time",
+    "candidates": "Candidate quests (2–3)",
+    "empty": "No slots this day",
+    "needsCandidates": "Needs more candidates",
+    "noQuests": "Add some quests to your library first.",
+    "errors": {
+      "candidates": "Pick 2–3 candidate quests",
+      "weekdays": "Pick at least one day",
+      "time": "That time isn’t valid",
+      "per_day": "That day already has 6 slots",
+      "duplicate": "There’s already a slot at that time"
+    }
+  },
+  "quests": {
+    "title": "Quest library",
+    "hint": "Turn the things you want to do into quests. Deleting a used quest archives it so your log keeps it.",
+    "add": "Add quest",
+    "form": "Quest",
+    "name": "Name",
+    "stat": "Type",
+    "minutes": "Duration (minutes)",
+    "icon": "Icon",
+    "editLabel": "Edit {{name}}",
+    "archived": "“{{name}}” was archived because your log or a slot still uses it.",
+    "deleted": "“{{name}}” was deleted.",
+    "errors": {
+      "name": "Name must be 1–40 characters",
+      "minutes": "Duration must be 5–480 minutes"
+    }
+  },
+  "profile": {
+    "title": "Adventurer profile",
+    "stats": "Stats",
+    "badges": "Badges",
+    "log": "Adventure log",
+    "logEmpty": "No quests finished yet. Your first one awaits.",
+    "partialTag": "partly",
+    "best": "Best streak {{count}} days"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "notifications": "Notifications",
+    "status": {
+      "synced": "On and synced",
+      "pending": "On, waiting to sync (syncs when online)",
+      "off": "Off",
+      "unsupported": "This browser can’t receive push. On iPhone, add the app to your Home Screen first (iOS 16.4+).",
+      "unconfigured": "No push service is configured for this build (see docs/deploy.md).",
+      "denied": "Notification permission was denied — allow it in system settings."
+    },
+    "enable": "Turn on notifications",
+    "disable": "Turn off notifications",
+    "backup": "Backup",
+    "backupHint": "Your data lives only on this device. Export a backup before switching phones or clearing the browser.",
+    "lastBackup": "Last backup: {{date}}",
+    "never": "never",
+    "export": "Export backup",
+    "import": "Import backup",
+    "importConfirm": "Importing replaces all current data (a copy of it is exported first). Continue?",
+    "importOk": "Import complete!",
+    "importErrors": {
+      "too_large": "The file is too large",
+      "not_json": "That’s not a backup file (not JSON)",
+      "wrong_app": "That isn’t a Lazy Guild backup",
+      "newer_version": "This backup is from a newer version — update the app first",
+      "invalid": "The backup file contains invalid data"
+    },
+    "reminderOff": "Turn off the 30-day backup reminder",
+    "about": "About",
+    "aboutText": "Lazy Guild · open source (MIT). For people who never follow plans but still want one.",
+    "source": "Source on GitHub"
   }
 }
